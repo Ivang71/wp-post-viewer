@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Все работы</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body, h1, h2, h3, p, ul, ol, figure, blockquote, dl, dd {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        a {
+            text-decoration: none;
+        }
+        #posts-container {
+            display: flex;
+            max-width: 100vw;
+            flex-direction: column;
+            gap: 10px;
+            margin: 100px 5px 100px;
+        }
+        .post-item {
+            display: flex;
+            gap: 10px;
+        }
+        .thumbnail-image {
+            max-width: 40%;
+            border-radius: 7px;
+        }
+    </style>
+</head>
+<body>
+    <div id="posts-container"></div>
+    <script type="module">
+        const fetchPosts = async (url) => {
+            const response = await fetch(url).then(r => r.json())
+            return response.items
+        }
+        const displayPosts = (posts) => {
+            const container = document.getElementById('posts-container')
+            container.textContent = ''
+
+            posts.forEach(post => {
+                const postDiv = document.createElement('div')
+                postDiv.className = 'post-item'
+
+                const thumbnailImg = document.createElement('img')
+                thumbnailImg.src = post.thumbnail
+                thumbnailImg.className = 'thumbnail-image'
+
+                const postLink = document.createElement('a')
+                postLink.href = post.url
+                postLink.textContent = post.title
+                postLink.target = '_blank'
+
+                postDiv.appendChild(thumbnailImg)
+                postDiv.appendChild(postLink)
+
+                container.appendChild(postDiv)
+            })
+        }
+
+        const url = 'https://xn--80abejcjl1dfie8j.xn--p1ai/?rest_route=/wb4wp/v1/wp_posts&page=1&per_page=500', cacheName = 'posts'
+        let posts = []
+
+        const cache = await caches.open(cacheName)
+        const cachedResponse = await cache.match(url)
+
+        if (cachedResponse) {
+            const cachedPosts = await cachedResponse.json()
+            displayPosts(cachedPosts)
+        }
+        posts = await fetchPosts(url)
+        displayPosts(posts)
+        await cache.put(url, new Response(JSON.stringify(posts)))
+    </script>
+</body>
+</html>
